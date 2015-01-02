@@ -124,13 +124,13 @@
 .\" ========================================================================
 .\"
 .IX Title "MON 1"
-.TH MON 1 "2015-01-02" "mon 3.0.1" "User Commands"
+.TH MON 1 "2015-01-02" "mon 1.0.0" "User Commands"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-mon \- A Humble Monitoring API Tool
+mon \- A Humble Monitoring API Tool for https://github.com/Crapworks/RESTlos
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 m is a synonym of the mon command. You can use either command, but m is shorter to type.
@@ -260,7 +260,7 @@ will result in a query string /host?host_name=testfe01. All other operators Pre-
 Can be used to use perl regex to filter the fields.
 .Sp
 Example:
-  m get host where host_name matches 'mfad\-adfe\ed\ed\e.*\e.cinetic.de'
+  m get host where host_name matches 'server\ed\ed\e.*\e.cinetic.de'
 .IP "nmatches" 4
 .IX Item "nmatches"
 Negation of matches.
@@ -269,7 +269,7 @@ Negation of matches.
 The specific field must be exactly as specified.
 .Sp
 Example:
-  m get host where host_name eq 'mfad\-adfe10.example.com'
+  m get host where host_name eq 'server10.example.com'
 .IP "ne" 4
 .IX Item "ne"
 Negation of eq
@@ -285,7 +285,7 @@ retrieves all hosts with its host number lower than 10.
 Example:
   m get host where host_name gt 10 and host_name le 20 and host_name like server
 .Sp
-retrieves all server hosts between 10 up to 20, which are mfad\-adfe{11..20} actually.
+retrieves all server hosts between 10 up to 20, which are server{11..20} actually.
 .SS "And \s-1FORMAT\s0 can be:"
 .IX Subsection "And FORMAT can be:"
 .IP "A string" 4
@@ -432,13 +432,13 @@ The mon supports everything that the RESTlos \s-1API\s0 supports as valid \s-1JS
 Example:
 .PP
 .Vb 1
-\&  [ "address", "172.19.184.14", "host_name", "mfad\-adfe01.example.com" ]
+\&  [ "address", "172.19.184.14", "host_name", "server01.example.com" ]
 .Ve
 .PP
 Will be interpreted by mon as
 .PP
 .Vb 1
-\&  { "address" : "172.19.184.14", "host_name" : "mfad\-adfe01.example.com" }
+\&  { "address" : "172.19.184.14", "host_name" : "server01.example.com" }
 .Ve
 .PP
 and pushed this way into the \s-1API\s0.

@@ -1,5 +1,6 @@
 NAME
-    mon - A Humble Monitoring API Tool
+    mon - A Humble Monitoring API Tool for
+    https://github.com/Crapworks/RESTlos
 
 SYNOPSIS
     m is a synonym of the mon command. You can use either command, but m is
@@ -46,8 +47,8 @@ SYNOPSIS
         underscore (e.g. _WORKER). One exception is the 'edit' operation of
         mon, it always shows all the meta variables.
 
-        The meta switch makes mon to display also all meta vairables all
-        the time.
+        The meta switch makes mon to display also all meta vairables all the
+        time.
 
     --nocolor or -n
         By default mon prints out some text in colors. Use this switch to
@@ -184,8 +185,8 @@ SYNOPSIS
         where host_name like testfe01b
 
         Notice: In double quotes you must escape the variable if you want to
-        use a mon variable. It is possible to use @ instead to avoid
-        cryptic escape sequences.
+        use a mon variable. It is possible to use @ instead to avoid cryptic
+        escape sequences.
 
           m update host set name = "$shell_expanded @host_name" where host_name like testfe01b
 
@@ -259,15 +260,13 @@ JSON BACKUPS
 
     ZSH users can copy or include the following file to have shell auto
     completion: /usr/share/mon/contrib/zsh/_mon.zsh. You can add
-    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m
-    mon.
+    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m mon.
 
     There is nothing like that for the Bash atm. =head1 ZSH AUTO COMPLETION
 
     ZSH users can copy or include the following file to have shell auto
     completion: /usr/share/mon/contrib/zsh/_mon.zsh. You can add
-    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m
-    mon.
+    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m mon.
 
     There is nothing like that for the Bash atm.
 

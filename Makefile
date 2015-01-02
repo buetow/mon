@@ -12,6 +12,7 @@ documentation:
                        --center="User Commands" ./docs/$(NAME).pod > ./docs/$(NAME).1
 	pod2text ./docs/$(NAME).pod > ./docs/$(NAME).txt
 	gzip -c ./docs/$(NAME).1 > ./docs/$(NAME).1.gz
+	cp ./docs/$(NAME).pod ./README.pod
 install: deinstall
 	test ! -d $(DESTDIR)/usr/bin && mkdir -p $(DESTDIR)/usr/bin || exit 0
 	test ! -d $(DESTDIR)/usr/share/$(NAME) && mkdir -p $(DESTDIR)/usr/share/$(NAME) || exit 0
