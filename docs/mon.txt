@@ -1,0 +1,394 @@
+NAME
+    mon - A Humble Monitoring API Tool
+
+SYNOPSIS
+    m is a synonym of the mon command. You can use either command, but m is
+    shorter to type.
+
+        m [OPTIONS] QUERY [OPTIONS]
+
+    mi is a synomym for mon --interactive --meta
+
+        mi [OPTIONS]
+
+  Where OPTIONS can be one (or several) of:
+    --config=VAL or -c=VAL
+        Specifies a config file to read instead the default ones.
+
+    --debug or -D
+        Prints out extra debugging infos during execution. This option also
+        implies --verbose. CAUTION: This switch does not work together with
+        the shell auto completion.
+
+    --dry or -d
+        Does not modify any object via the API, read only operations only.
+
+    --errfile=PATH or -E=PATH
+        If mon is used it is usefull to track if the last mon invocation
+        exited with an error. PATH specifies the full path to a status file
+        to be written if mon exists with an error.
+
+        Puppet can check for that file and can re-try the same operation the
+        next run.
+
+        Mon deletes that file automatically after the next successfull run.
+
+    --help or -h
+        Implies a --dry. Also prints out all available options.
+
+    --interactive or -i
+        Starts mon in interactive mode. Prefix a command with '!' to run it
+        via shell, e.g. '!ls /tmp'.
+
+    --meta or -m
+        By default mon does not show any meta (aka nagios custom variables)
+        in its JSON output. Those are all variables starting with an
+        underscore (e.g. _WORKER). One exception is the 'edit' operation of
+        mon, it always shows all the meta variables.
+
+        The meta switch makes mon to display also all meta vairables all
+        the time.
+
+    --nocolor or -n
+        By default mon prints out some text in colors. Use this switch to
+        disable that. Or use an environment variable to do that (see
+        ENVIRONMENT VARIABLES below).
+
+    --quiet or -q
+        Quiet mode. No output at all. This also implies --debug=0,
+        --verbose=0, --nocolor.
+
+    --syslog or -s
+        Loggs stuff to syslog. See later in this manpage for info more about
+        this.
+
+    --unique or -u
+        Prints only unique entries in getfmt.
+
+    --verbose or -v
+        Prints out extra infos during execution. CAUTION: This switch does
+        not work together with the shell auto completion.
+
+    --version or -V
+        Prints out program version.
+
+    --foo.bar=value
+        In addition it is possible to overwrite all values of the mon.conf
+        via command line interface. E.g. --restlos.api.port=10043 will
+        overwrite the api port (ignores the value of the mon.conf).
+
+        These keys must be in 'dot-separated' format.
+
+    An option can be written at the beginning or at the end of each command.
+
+  Where QUERY can be one one of:
+        delete CATEGORY [where FIELD1 OP VALUE1 [and ...]] 
+        edit|view CATEGORY [where FIELD1 OP VALUE1 [and ...]] 
+        get CATEGORY [where FIELD1 OP VALUE1 [and ...]]
+        get CATEGORY [where FIELD1 OP VALUE1 [and ...]] > datafile.json
+        getfmt FORMAT CATEGORY [where FIELD1 OP VALUE1 [and ...]]
+        getfmt FORMAT CATEGORY [where FIELD1 OP VALUE1 [and ...]] > datafile
+        insert CATEGORY set FIELD1 = VALUE1 [and FIELD2 = VALUE2 ...] 
+        post CATEGORY < datafile.json 
+        post CATEGORY from datafile.json 
+        put CATEGORY < datafile.json 
+        put CATEGORY from datafile.json 
+        update CATEGORY delete FIELD1 [and FIELD2 ...] 
+          where FIELD3 OP VALUE3 [and ...]]]
+        update CATEGORY set FIELD1 = FORMAT [and FIELD2 = 
+          FORMAT2 ...] where FIELD3 OP VALUE3 [and ...]]] 
+        verify|restart|reload [OPTIONS]
+
+   Shortcut versions of the commands above are:
+        a for and
+        d for delete
+        e for edit
+        f for getfmt
+        g for get
+        i for insert
+        l and ~ for like
+        p for post
+        r for reload/restart
+        s for set
+        t for put
+        u for update
+        v for view
+        y for verify
+        : for where
+        == for eq
+        != for ne
+        =~ for matches
+        !~ for nmatches
+
+    They don't show up in the online help in order not to mess it up.
+
+  And OP can be:
+    like
+        Like is the fastest operator and will be used within the query
+        string against the monitoring API itself.
+
+        Example: m get host where host_name like testfe01
+
+        will result in a query string /host?host_name=testfe01. All other
+        operators Pre-fetch the results from the API and filter the response
+        JSONs.
+
+    matches
+        Can be used to use perl regex to filter the fields.
+
+        Example: m get host where host_name matches
+        'server\d\d\.*\.cinetic.de'
+
+    nmatches
+        Negation of matches.
+
+    eq  The specific field must be exactly as specified.
+
+        Example: m get host where host_name eq 'server10.example.com'
+
+    ne  Negation of eq
+
+    lt, le, gt, ge
+        The specific field must match (numerically) as specified.
+
+        Example: m get host where host_name lt 10
+
+        retrieves all hosts with its host number lower than 10.
+
+        Example: m get host where host_name gt 10 and host_name le 20 and
+        host_name like server
+
+        retrieves all server hosts between 10 up to 20, which are
+        server{11..20} actually.
+
+  And FORMAT can be:
+    A string
+        Example: m update host set name = foo where host_name like testfe01
+
+    A string with special chars
+        Example: m update host set name = 'foo! bar% baz$' where host_name
+        like testfe01
+
+    A mon variable (uses a value of the current object)
+        Examples:
+
+          m update host set name = '$host_name' where host_name like testfe01
+
+          m update host set name = '${host_name}foo' where host_name like testfe01
+
+        Notice: This actually uses the host_name value of the current host
+        object being modified. It can be done with any value of this object.
+
+    A string with variables expanded by the shell
+        Example: m update host set name = "$shell_expanded \$host_name"
+        where host_name like testfe01b
+
+        Notice: In double quotes you must escape the variable if you want to
+        use a mon variable. It is possible to use @ instead to avoid
+        cryptic escape sequences.
+
+          m update host set name = "$shell_expanded @host_name" where host_name like testfe01b
+
+        It also works this way:
+
+          m update host set name = "$shell_expanded @{host_name}foo" where host_name like testfe01b
+
+    A common use case
+          m update host set name = @host_name where host_name like testfe01
+
+    Some "encrypted" example
+          m update host set _FOO = "@{host_name}knurks${bash_variable}\$foo' where host_name like testfe01
+
+    Or via getfmt
+          m getfmt "Host: @host_name" host where host_name like testfe01
+
+        One special case is the following:
+
+          m getfmt "Host: @HOSTNAME" host where host_name like testfe01
+
+        which explicitly turns host_name which may be a FQDN to a host name.
+
+CONFIG
+    Create a config file by using the the sample configuration file
+    /usr/share/mon/examples/mon.conf.sample into one of the following (or
+    into several places):
+
+        /etc/mon.conf
+        /etc/mon.d/*.conf
+        ~/.mon.conf
+        ~/.mon.d/*.conf
+
+    The last config file always overwrites the values configured in the
+    previous config files. The password can be specified in plain text in
+    restlos.auth.password. If that does not exist it can be in
+    restlos.auth.password.enc but Base64 encoded. Example:
+
+      bash -c 'read -s PASSWORD; tr -d "\n" <<< "$PASSWORD" | base64'
+
+    This can be overwritten with the MON_CONFIG environment variable or the
+    --config= or -c= switch.
+
+    It's also possible to overwrite each single config line via command line
+    option (see --foo.bar=value above).
+
+    Some configuration options also support default values. Read the
+    comments of the sample config file to find out more about that.
+
+STDOUT and STDERR
+    JSON output is always printed to STDOUT. Makes it easier to redirect it
+    into a file. All other output is always printed to STDERR, so it's not
+    interfering with the JSON stuff.
+
+JSON BACKUPS
+    Mon writes backups of the JSON data before data is going to be
+    manipulated into the backups.dir directory. Backups older than
+    backups.keep.days days will be deleted on each run automatically, thus
+    the disk space and inodes should not be a problem.
+
+    Backup file names are in the form of
+
+        backup_%Y%m%d_%H%M%S_CATEGORY.json
+
+    To recover data just do something like this:
+
+        vim ~/.mon/BACKFILE # For the case you want to edit some stuff
+        m post CATEGORY < ~/.mon/BACKFILE
+
+    Set backups.disable to 1 to disable backups.
+
+
+    ZSH users can copy or include the following file to have shell auto
+    completion: /usr/share/mon/contrib/zsh/_mon.zsh. You can add
+    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m
+    mon.
+
+    There is nothing like that for the Bash atm. =head1 ZSH AUTO COMPLETION
+
+    ZSH users can copy or include the following file to have shell auto
+    completion: /usr/share/mon/contrib/zsh/_mon.zsh. You can add
+    /usr/share/mon/contrib/zsh to the FPATH variable and run compinit m
+    mon.
+
+    There is nothing like that for the Bash atm.
+
+ENVIRONMENT VARIABLES
+  COLOR OUTPUT
+    By default mon uses Term::ANSIColor to produce colorful text output. To
+    disable that just set the MON_COLORFUL environment variable to 0. It's
+    not possible to specify this in a config file because in verbose mode
+    there is stuff printed already before parsing it.
+
+  SSL CA CERTIFICATE
+    For restlos.api.host ./ca.pem or /etc/ssl/certs/ca.pem or
+    /usr/share/mon/ca.pem is used (the first CA file found actually).
+    Alternatively point the HTTPS_CA_FILE environment variable to the CA
+    file to use.
+
+    The file /etc/ssl/certs/ca.pem actually comes from the recommended
+    package dependency ca-root-cert, which should be in the Unitix deb
+    repository.
+
+  SYSLOG
+    it's possible to set the MON_SYSLOG environment variable to a value !=
+    to logg to syslog. Mon always uses LOG_LOCAL0.
+
+EXIT CODE
+    0   Mon terminates without any error.
+
+    2   The API itself terminates with an error (e.g. syntax error).
+
+    3   Some hard error raised by mon itself.
+
+    All other exit codes are undefined and/or caused by the autodie Perl
+    module.
+
+INPUT JSON FORMAT
+    The mon supports everything that the RESTlos API supports as valid JSON
+    input. In addition mon also supports to insert a single object in list
+    style format.
+
+    Example:
+
+      [ "address", "172.19.184.14", "host_name", "server01.example.com" ]
+
+    Will be interpreted by mon as
+
+      { "address" : "172.19.184.14", "host_name" : "server01.example.com" }
+
+    and pushed this way into the API.
+
+MORE EXAMPLES
+    Get a list of possible commands
+
+        m
+
+    Get a list of possible categories
+
+        m get
+
+    Get all defined category objects (e.g. 'mon get host' gets all hosts)
+
+        m get CATEGORY
+
+    Print notice with all possible fields
+
+        m get CATEGORY where
+
+    Get some stuff
+
+        m get CATEGORY where FIELDNAME like VALUE [and FIELDNAME2 like VALUE2 ...]
+
+    Update objects per POST request (e.g. mon post contact < pbuetow.json)
+
+        m post CATEGORY < object.json
+
+    Get some stuff, open the results in $EDITOR (vim by default), commit the
+    changes back via put.
+
+        m edit CATEGORY where FIELDNAME like VALUE [and FIELDNAME2 like VALUE2 ...]
+
+    Get some stuff, open the results in $PAGER (view by default), just to
+    see in read only mode.
+
+        m view CATEGORY where FIELDNAME like VALUE [and FIELDNAME2 like VALUE2 ...]
+
+    Validate the current monitoring configuration
+
+        m verify
+
+    Restart/reload the monitoring configuration by restarting the monitoring
+    core. Validation of the configuration is done by the monitoring API. On
+    failure the previous version will be rolled back automatically by the
+    API.
+
+        m restart
+
+    Run a command in verbose mode
+
+        m verbose get
+
+    Fetch all categories
+
+        ( m get 2>&1 ) | while read category; do m get $category > $category.json; done
+
+    Delete all contacts with alias like Foo
+
+        m delete contact where alias like Foo
+
+    Update fields of an existing object
+
+        m update contact set alias = "Paul Buetow" and _CUSTOM_NEW = "foo" where alias like Buetow
+
+    Create some fields, and delete them again
+
+        m update contact set _FOO = "Master of the Universe" and _BAR = "Beer" where email like 1und1
+
+        m update contact delete _FOO and _BAR where email like 1und1
+
+    Insert a new contact (raises an error if contact already exists)
+
+        m insert contact set name = "Master of the Universe" and _BAR = "Beer"
+
+AUTHOR
+    Paul Buetow - <paul@buetow.org>
+

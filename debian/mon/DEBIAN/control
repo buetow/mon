@@ -1,0 +1,12 @@
+Package: mon
+Version: 3.0.1
+Architecture: all
+Maintainer: Paul Buetow <paul@buetow.org>
+Installed-Size: 126
+Depends: perl, libwww-perl, libtime-modules-perl, libconfig-json-perl, libio-socket-ssl-perl, libunix-syslog-perl, libjson-xs-perl, libterm-readline-gnu-perl
+Recommends: ca-root-cert, vim
+Section: utils
+Priority: optional
+Homepage: https://mamat-git0101.infra.server.lan/mon
+Description: A simple monitoring API tool
+ Uses the RESTlos monitoring API to configure monitoring stuff.

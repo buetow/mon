@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+#
+# (c) 2013, 2014 1&1 Internet AG
+# Paul C. Buetow <paul@buetow.org>
+
+use strict;
+use warnings;
+use v5.10;
+use autodie;
+
+use Data::Dumper;
+use Term::ReadLine;
+
+$| = 1;
+my $lib;
+
+BEGIN {
+    if ( -d './lib/MON' ) {
+        $lib = './lib';
+
+    }
+    else {
+        $lib = '/usr/share/mon/lib';
+    }
+
+    unless ( exists $ENV{HTTPS_CA_FILE} ) {
+        if ( -f 'ca.pem' ) {
+            $ENV{HTTPS_CA_FILE} = 'ca.pem';
+        }
+        elsif ( -f '/etc/ssl/certs/ca.pem' ) {
+            $ENV{HTTPS_CA_FILE} = '/etc/ssl/certs/ca.pem';
+        }
+        else {
+            $ENV{HTTPS_CA_FILE} = '/usr/share/mon/ca.pem';
+        }
+    }
+}
+
+use lib $lib;
+
+use MON::RESTlos;
+use MON::Config;
+use MON::Options;
+use MON::Query;
+use MON::Syslogger;
+use MON::Utils;
+use MON::Display;
+
+sub main (@) {
+    my @args = @_;
+    my @opts;
+
+    # Only interpret OPTIONS if they are at the beginning
+    push @opts, shift @args while @args and $args[0] =~ /^-/;
+
+    # .. or at the end
+    push @opts, pop @args while @args and $args[-1] =~ /^-/;
+
+    my $options = MON::Options->new( opts_passed => \@opts );
+    my $logger = MON::Syslogger->new( options => $options );
+    my $config = MON::Config->new( options => $options, logger => $logger );
+
+    if ( $config->{'version'} ) {
+        print get_version(), "\n";
+        exit 0;
+    }
+
+    $logger->logg( 'info', "Invoked by $ENV{USER} (params: @ARGV)" );
+
+    if ( $config->{interactive} ) {
+        my $term   = Term::ReadLine->new('Monitoring API tool');
+        my $prompt = '>> ';
+        my $out    = $term->OUT || \*STDOUT;
+
+        say $out "Welcome to the Monitoring API Tool v" . get_version();
+        say $out "Press Ctrl+D to exit; Prefix cmd with ! to run via shell";
+
+        while ( defined( $_ = $term->readline($prompt) ) ) {
+            $term->addhistory($_) if /\S/;
+
+            if (s/^!//) {
+                system($_);
+            }
+            else {
+
+                my $line = $_;
+
+                my @args = split / +/, $line;
+
+                my $api = MON::RESTlos->new( config => $config );
+                my $query = MON::Query->new(
+                    config  => $config,
+                    api     => $api,
+                    options => $options,
+                    args    => \@args
+                );
+                $query->parse();
+            }
+        }
+
+    }
+    else {
+        my $api = MON::RESTlos->new( config => $config );
+        my $query = MON::Query->new(
+            config  => $config,
+            api     => $api,
+            options => $options,
+            args    => \@args
+        );
+
+        $query->parse();
+        $query->verbose("Good bye");
+
+        if ( $api->{had_error} != 0 ) {
+
+            # Needed by Puppet to re-try operation the next Puppet run
+            if ( $config->{errfile} ne '' ) {
+                open my $fh, $config->{errfile} or die "$!: $config->{errfile}";
+                print $fh "Exited with an error\n";
+                close $fh;
+            }
+
+            exit 2;
+        }
+        else {
+            unlink $config->{errfile}
+              if $config->{errfile} ne '' and -f $config->{errfile};
+            exit 0;
+        }
+    }
+}
+
+main @ARGV;

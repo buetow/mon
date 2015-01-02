@@ -1,0 +1,2 @@
+Requires: perl-Digest-SHA, perl-libwww-perl, perl-JSON, perl-JSON-XS, perl-Unix-Syslog, perl-IO-Socket-SSL, perl-Term-ReadLine-Gnu
+BuildArch: noarch
