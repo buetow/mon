@@ -389,5 +389,5 @@ MORE EXAMPLES
         m insert contact set name = "Master of the Universe" and _BAR = "Beer"
 
 AUTHOR
-    Paul Buetow - <paul@buetow.org>
+    Paul Buetow - <http://mon.buetow.org>
 

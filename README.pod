@@ -404,6 +404,6 @@ Insert a new contact (raises an error if contact already exists)
 
 =head1 AUTHOR
 
-Paul Buetow - <paul@buetow.org>
+Paul Buetow - <http://mon.buetow.org>
 
 =cut
