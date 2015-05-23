@@ -5,8 +5,8 @@ Maintainer: Paul Buetow <paul@buetow.org>
 Build-Depends: perl, perltidy, alien, rpm
 Standards-Version: 3.9.2
 Homepage: http://mon.buetow.org
-Vcs-Git: https://github.com/rantanplan/mon
-Vcs-Browser: https://github.com/rantanplan/mon
+Vcs-Git: https://github.com/buetow/mon
+Vcs-Browser: https://github.com/buetow/mon
 
 Package: mon
 Architecture: all
